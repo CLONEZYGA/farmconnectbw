@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "HelloWorld",
-    "slug": "expo-template-default",
+    "name": "FarmConnectBW",
+    "slug": "farmconnectbw",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,13 +9,15 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gamerzyga.farmconnectbw"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.gamerzyga.farmconnectbw"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +38,18 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d90acdd9-caa9-429d-add7-1a7dd14a3a52"
+      }
+    },
+    "owner": "gamerzyga",
+    "updates": {
+      "url": "https://u.expo.dev/d90acdd9-caa9-429d-add7-1a7dd14a3a52"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
