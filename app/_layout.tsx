@@ -1,39 +1,40 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+// app/_layout.tsx
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import AuthProvider from '../context/AuthContext';
+import { CartProvider } from '../context/CartContext';
+import { ExpertProvider } from '../context/ExpertContext';
+import { BuyerProvider } from '../context/BuyerContext';
+import { OrderProvider } from '../context/OrderContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import NetworkStatus from '../components/NetworkStatus';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ExpertProvider>
+          <BuyerProvider>
+            <CartProvider>
+              <OrderProvider>
+                <NetworkStatus />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: '#fff' },
+                  }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(farmer)" />
+                  <Stack.Screen name="(expert)" />
+                  <Stack.Screen name="(buyer)" />
+                  <Stack.Screen name="(admin)" />
+                </Stack>
+              </OrderProvider>
+            </CartProvider>
+          </BuyerProvider>
+        </ExpertProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

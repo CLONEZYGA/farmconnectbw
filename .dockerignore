@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+.env
+.firebase
+.vscode
+.DS_Store
+build
+dist
+.expo

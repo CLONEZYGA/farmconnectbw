@@ -1,0 +1,4 @@
+# Ignore legacy folders inside app that are not routes
+app/services/
+app/utils/
+app/types/
