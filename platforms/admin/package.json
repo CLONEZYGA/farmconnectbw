@@ -1,39 +1,24 @@
 {
-  "name": "farmconnectbw-workspace",
-  "private": true,
-  "license": "0BSD",
-  "workspaces": [
-    "platforms/admin",
-    "platforms/user",
-    "shared"
-  ],
+  "name": "farmconnectbw-admin",
+  "version": "1.0.0",
   "main": "expo-router/entry",
-  "version": "52.0.64",
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
+    "reset-project": "node ../../scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build": "expo build",
+    "build:dev": "eas build --profile development",
+    "build:preview": "eas build --profile preview",
+    "build:prod": "eas build --profile production",
     "test": "jest --watchAll",
-    "lint": "expo lint",
-    "admin:start": "cd platforms/admin && expo start",
-    "admin:web": "cd platforms/admin && expo start --web",
-    "admin:build": "cd platforms/admin && eas build --platform all",
-    "user:start": "cd platforms/user && expo start",
-    "user:web": "cd platforms/user && expo start --web",
-    "user:build": "cd platforms/user && eas build --platform all",
-    "shared:build": "cd shared && npm run build",
-    "install:all": "npm install && cd platforms/admin && npm install && cd ../user && npm install && cd ../../shared && npm install",
-    "clean": "rm -rf node_modules platforms/*/node_modules shared/node_modules"
-  },
-  "jest": {
-    "preset": "jest-expo"
+    "lint": "expo lint"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
-    "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
+    "@react-navigation/native-stack": "^7.2.0",
     "expo": "~52.0.31",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.5",
@@ -55,18 +40,38 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
+    "firebase": "^11.0.0",
+    "@firebase/app": "^11.0.0",
+    "@firebase/auth": "^11.0.0",
+    "@firebase/firestore": "^11.0.0",
+    "@firebase/database": "^11.0.0",
+    "@firebase/storage": "^11.0.0",
+    "react-native-svg": "15.8.0",
+    "react-native-paper": "^5.12.5",
+    "react-native-vector-icons": "^10.1.0",
+    "react-query": "^3.39.3",
+    "react-hook-form": "^7.51.5",
+    "recharts": "^2.12.7",
+    "date-fns": "^3.6.0",
+    "lodash": "^4.17.21",
     "expo-dev-client": "~5.0.11",
-    "expo-insights": "~0.8.2",
-    "expo-updates": "~0.26.17"
+    "expo-insights": "~0.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@types/jest": "^29.5.12",
     "@types/react": "~18.3.12",
-    "@types/react-test-renderer": "^18.3.0",
+    "@types/react-test-renderer": "~18.3.0",
     "jest": "^29.2.1",
     "jest-expo": "~52.0.3",
     "react-test-renderer": "18.3.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@types/lodash": "^4.17.7"
+  },
+  "private": true,
+  "workspaces": {
+    "nohoist": [
+      "react",
+      "react-native"
+    ]
   }
 }

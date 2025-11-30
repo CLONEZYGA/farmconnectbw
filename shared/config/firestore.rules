@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAdmin() {
+      return request.auth != null && request.auth.token.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function hasRole(role) {
+      return request.auth != null && request.auth.token.role == role;
+    }
+
+    function hasPermission(permission) {
+      return request.auth != null &&
+             request.auth.token.permissions != null &&
+             permission in request.auth.token.permissions;
+    }
+
+    // Admin-only collections
+    match /admin_logs/{document=**} {
+      allow read, write: if isAdmin();
+      allow delete: if hasPermission('delete_logs');
+    }
+
+    match /admin_settings/{document=**} {
+      allow read: if isAdmin();
+      allow write: if hasPermission('manage_settings');
+      allow update: if hasPermission('edit_settings');
+    }
+
+    match /admin_reports/{document=**} {
+      allow read: if isAdmin();
+      allow write: if hasPermission('generate_reports');
+      allow delete: if hasPermission('delete_reports');
+    }
+
+    // User management
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Users can update their own profile (restricted fields)
+      allow update: if isOwner(userId) &&
+                   !request.resource.data.keys().hasAll(['role', 'permissions', 'createdAt', 'isVerified']);
+
+      // Admins can manage user profiles
+      allow write: if isAdmin() && hasPermission('manage_users');
+
+      // Only admins can create new users
+      allow create: if isAdmin() && hasPermission('create_users');
+
+      // Only admins can delete users
+      allow delete: if isAdmin() && hasPermission('delete_users');
+    }
+
+    // Product management
+    match /products/{productId} {
+      // Anyone can read products
+      allow read: if request.auth != null;
+
+      // Farmers can create products
+      allow create: if hasRole('farmer') &&
+                    request.resource.data.keys().hasAll(['farmerId', 'name', 'price', 'category']) &&
+                    request.resource.data.farmerId == request.auth.uid;
+
+      // Farmers can update their own products
+      allow update: if hasRole('farmer') &&
+                    resource.data.farmerId == request.auth.uid;
+
+      // Farmers can delete their own products
+      allow delete: if hasRole('farmer') &&
+                    resource.data.farmerId == request.auth.uid;
+
+      // Admins can manage all products
+      allow write: if isAdmin() && hasPermission('manage_products');
+    }
+
+    // Order management
+    match /orders/{orderId} {
+      // Farmers and buyers involved in the order can read it
+      allow read: if isOwner(resource.data.buyerId) ||
+                   isOwner(resource.data.farmerId) ||
+                   isAdmin();
+
+      // Buyers can create orders
+      allow create: if hasRole('buyer') &&
+                    request.resource.data.keys().hasAll(['buyerId', 'farmerId', 'products', 'total']) &&
+                    request.resource.data.buyerId == request.auth.uid;
+
+      // Farmers can update order status
+      allow update: if (hasRole('farmer') && resource.data.farmerId == request.auth.uid &&
+                        request.resource.data.keys().hasAny(['status', 'notes'])) ||
+                       (hasRole('buyer') && resource.data.buyerId == request.auth.uid &&
+                        request.resource.data.keys().hasAny(['status', 'notes']) &&
+                        request.resource.data.status in ['cancelled']);
+
+      // Admins can manage all orders
+      allow write: if isAdmin() && hasPermission('manage_orders');
+
+      // Delete is only allowed for cancellations
+      allow delete: if (hasRole('buyer') && resource.data.buyerId == request.auth.uid) ||
+                     isAdmin();
+    }
+
+    // Consultation management
+    match /consultations/{consultationId} {
+      // Farmers and experts involved can read consultations
+      allow read: if isOwner(resource.data.farmerId) ||
+                   isOwner(resource.data.expertId) ||
+                   isAdmin();
+
+      // Farmers can create consultation requests
+      allow create: if hasRole('farmer') &&
+                    request.resource.data.keys().hasAll(['farmerId', 'expertId', 'type']) &&
+                    request.resource.data.farmerId == request.auth.uid;
+
+      // Experts can update consultation status and scheduling
+      allow update: if (hasRole('expert') && resource.data.expertId == request.auth.uid &&
+                        request.resource.data.keys().hasAny(['status', 'scheduledAt', 'meetingLink'])) ||
+                       (hasRole('farmer') && resource.data.farmerId == request.auth.uid &&
+                        request.resource.data.keys().hasAny(['status']) &&
+                        request.resource.data.status in ['cancelled']);
+
+      // Admins can manage all consultations
+      allow write: if isAdmin() && hasPermission('manage_consultations');
+
+      allow delete: if isAdmin();
+    }
+
+    // Query restrictions for performance
+    match /products/{productId} {
+      allow list: if request.auth != null;
+      allow get: if request.auth != null;
+    }
+
+    match /orders/{orderId} {
+      allow list: if false; // Prevent list operations on orders
+      allow get: if request.auth != null;
+    }
+
+    match /consultations/{consultationId} {
+      allow list: if false; // Prevent list operations on consultations
+      allow get: if request.auth != null;
+    }
+
+    // Indexes definition (for optimal queries)
+    match /products {
+      allow list: if request.auth != null;
+      function orderByProductQuery() {
+        return request.query.orderBy == null ||
+               request.query.orderBy == 'createdAt' ||
+               request.query.orderBy == 'price' ||
+               request.query.orderBy == 'name';
+      }
+
+      ensure orderByProductQuery();
+    }
+
+    match /users {
+      allow list: if isAdmin();
+      function orderByUserQuery() {
+        return request.query.orderBy == null ||
+               request.query.orderBy == 'createdAt' ||
+               request.query.orderBy == 'email';
+      }
+
+      ensure orderByUserQuery();
+    }
+  }
+}

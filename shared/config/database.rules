@@ -1,0 +1,271 @@
+{
+  "rules": {
+    // Helper functions (simulated through rule structure)
+    "admin": {
+      ".read": "auth != null && auth.token.role == 'admin'",
+      ".write": "auth != null && auth.token.role == 'admin'"
+    },
+
+    "users": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    // Admin-only sections
+    "admin": {
+      "users": {
+        "$userId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+          ".write": "auth != null && auth.token.role == 'admin'",
+          ".indexOn": ["email", "role", "createdAt", "isActive"]
+        },
+        ".read": "auth != null && auth.token.role == 'admin'",
+        ".write": "auth != null && auth.token.role == 'admin' && auth.token.permissions.includes('manage_users')",
+        ".indexOn": ["role", "isActive", "createdAt"]
+      },
+
+      "logs": {
+        "$logId": {
+          ".read": "auth != null && auth.token.role == 'admin'",
+          ".write": "auth != null && auth.token.role == 'admin'",
+          ".indexOn": ["userId", "action", "timestamp"]
+        },
+        ".read": "auth != null && auth.token.role == 'admin'",
+        ".write": "auth != null && auth.token.role == 'admin'",
+        ".indexOn": ["timestamp", "action"]
+      },
+
+      "reports": {
+        "$reportId": {
+          ".read": "auth != null && auth.token.role == 'admin'",
+          ".write": "auth != null && auth.token.role == 'admin'",
+          ".indexOn": ["type", "generatedAt", "generatedBy"]
+        },
+        ".read": "auth != null && auth.token.role == 'admin'",
+        ".write": "auth != null && auth.token.role == 'admin' && auth.token.permissions.includes('generate_reports')",
+        ".indexOn": ["generatedAt", "type"]
+      },
+
+      "settings": {
+        ".read": "auth != null && auth.token.role == 'admin'",
+        ".write": "auth != null && auth.token.role == 'admin' && auth.token.permissions.includes('manage_settings')",
+        "platform": {
+          ".read": "auth != null && auth.token.role == 'admin'",
+          ".write": "auth != null && auth.token.role == 'admin' && auth.token.permissions.includes('manage_platform')"
+        },
+        "features": {
+          ".read": "auth != null && auth.token.role == 'admin'",
+          ".write": "auth != null && auth.token.role == 'admin' && auth.token.permissions.includes('manage_features')"
+        },
+        "notifications": {
+          ".read": "auth != null && auth.token.role == 'admin'",
+          ".write": "auth != null && auth.token.role == 'admin' && auth.token.permissions.includes('manage_notifications')"
+        }
+      }
+    },
+
+    // User-accessible sections
+    "users": {
+      "farmers": {
+        "$userId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+          ".write": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+          ".indexOn": ["farmLocation.address", "farmName", "specialization", "createdAt"],
+          "farmLocation": {
+            "coordinates": {
+              ".indexOn": ["latitude", "longitude"]
+            }
+          },
+          "contactInfo": {
+            "phone": {
+              ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 20"
+            },
+            "email": {
+              ".validate": "newData.isString() && newData.val().matches(/^[^@]+@[^@]+\\.[^@]+$/)"
+            }
+          },
+          "profileImage": {
+            ".validate": "newData.isString() || newData == null"
+          }
+        },
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["farmName", "specialization", "createdAt", "farmSize"]
+      },
+
+      "buyers": {
+        "$userId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+          ".write": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+          ".indexOn": ["location.address", "businessType", "preferences.productTypes", "createdAt"],
+          "location": {
+            "coordinates": {
+              ".indexOn": ["latitude", "longitude"]
+            }
+          },
+          "contactInfo": {
+            "phone": {
+              ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 20"
+            },
+            "email": {
+              ".validate": "newData.isString() && newData.val().matches(/^[^@]+@[^@]+\\.[^@]+$/)"
+            }
+          },
+          "preferences": {
+            "productTypes": {
+              ".validate": "newData.isArray() && newData.size() <= 20"
+            }
+          }
+        },
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["businessType", "createdAt", "location.address"]
+      },
+
+      "experts": {
+        "$userId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+          ".write": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+          ".indexOn": ["specialization", "experience", "location", "createdAt"],
+          "qualifications": {
+            "certifications": {
+              ".validate": "newData.isArray() && newData.size() <= 50"
+            },
+            "licenses": {
+              ".validate": "newData.isArray() && newData.size() <= 20"
+            }
+          },
+          "availability": {
+            "days": {
+              ".validate": "newData.isArray() && newData.size() <= 7"
+            },
+            "timeSlots": {
+              ".validate": "newData.isArray() && newData.size() <= 20"
+            }
+          },
+          "contactInfo": {
+            "phone": {
+              ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 20"
+            },
+            "email": {
+              ".validate": "newData.isString() && newData.val().matches(/^[^@]+@[^@]+\\.[^@]+$/)"
+            }
+          }
+        },
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["specialization", "experience", "location"]
+      }
+    },
+
+    // Product management
+    "products": {
+      "$productId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (auth.token.role == 'admin' || (auth.token.role == 'farmer' && data.child('farmerId').val() == auth.uid))",
+        ".indexOn": ["farmerId", "category", "location.address", "price", "organic", "available", "createdAt"],
+        "location": {
+          "coordinates": {
+            ".indexOn": ["latitude", "longitude"]
+          }
+        },
+        "price": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+        },
+        "quantity": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+        },
+        "farmerId": {
+          ".validate": "newData.isString() && newData.val() == auth.uid"
+        }
+      },
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.role == 'farmer'",
+      ".indexOn": ["category", "location.address", "organic", "available", "createdAt"]
+    },
+
+    // Order management
+    "orders": {
+      "$orderId": {
+        ".read": "auth != null && (auth.token.role == 'admin' || data.child('buyerId').val() == auth.uid || data.child('farmerId').val() == auth.uid)",
+        ".write": "auth != null && (auth.token.role == 'admin' || (data.child('buyerId').val() == auth.uid && newData.hasOnly(['status'])) || (data.child('farmerId').val() == auth.uid && newData.hasOnly(['status', 'notes'])))",
+        ".indexOn": ["buyerId", "farmerId", "status", "createdAt"],
+        "status": {
+          ".validate": "newData.isString() && newData.val().matches(/^(pending|confirmed|preparing|ready|delivered|cancelled)$/)"
+        },
+        "total": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+        },
+        "deliveryAddress": {
+          "coordinates": {
+            ".indexOn": ["latitude", "longitude"]
+          }
+        }
+      },
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.role == 'buyer' || auth.token.role == 'farmer')",
+      ".indexOn": ["status", "createdAt"]
+    },
+
+    // Consultation management
+    "consultations": {
+      "$consultationId": {
+        ".read": "auth != null && (auth.token.role == 'admin' || data.child('farmerId').val() == auth.uid || data.child('expertId').val() == auth.uid)",
+        ".write": "auth != null && (auth.token.role == 'admin' || (data.child('farmerId').val() == auth.uid && newData.hasOnly(['status'])) || (data.child('expertId').val() == auth.uid && newData.hasOnly(['status', 'scheduledAt', 'meetingLink'])))",
+        ".indexOn": ["farmerId", "expertId", "status", "scheduledAt", "createdAt"],
+        "status": {
+          ".validate": "newData.isString() && newData.val().matches(/^(requested|scheduled|in_progress|completed|cancelled)$/)"
+        },
+        "scheduledAt": {
+          ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.?[0-9]*Z?$/)"
+        }
+      },
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.role == 'farmer' || auth.token.role == 'expert')",
+      ".indexOn": ["status", "scheduledAt", "createdAt"]
+    },
+
+    // Notifications
+    "notifications": {
+      "$userId": {
+        "$notificationId": {
+          ".read": "auth != null && auth.uid == $userId",
+          ".write": "auth != null && (auth.uid == $userId || auth.token.role == 'admin')",
+          ".indexOn": ["timestamp", "read", "type"]
+        },
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && (auth.uid == $userId || auth.token.role == 'admin')"
+      }
+    },
+
+    // Real-time updates for live features
+    "live": {
+      "orders": {
+        "$orderId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || data.child('buyerId').val() == auth.uid || data.child('farmerId').val() == auth.uid)",
+          ".write": "auth != null && (auth.token.role == 'admin' || data.child('farmerId').val() == auth.uid)"
+        }
+      },
+      "consultations": {
+        "$consultationId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || data.child('farmerId').val() == auth.uid || data.child('expertId').val() == auth.uid)",
+          ".write": "auth != null && (auth.token.role == 'admin' || data.child('expertId').val() == auth.uid)"
+        }
+      },
+      "chat": {
+        "$orderId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || data.child('buyerId').val() == auth.uid || data.child('farmerId').val() == auth.uid)",
+          ".write": "auth != null && (auth.token.role == 'admin' || data.child('buyerId').val() == auth.uid || data.child('farmerId').val() == auth.uid)"
+        },
+        "$consultationId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || data.child('farmerId').val() == auth.uid || data.child('expertId').val() == auth.uid)",
+          ".write": "auth != null && (auth.token.role == 'admin' || data.child('farmerId').val() == auth.uid || data.child('expertId').val() == auth.uid)"
+        }
+      }
+    },
+
+    // Deny access to any other paths
+    ".read": false,
+    ".write": false
+  }
+}

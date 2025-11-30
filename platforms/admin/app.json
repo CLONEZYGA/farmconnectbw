@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "FarmConnectBW Admin",
+    "slug": "farmconnectbw-admin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "../assets/icon-admin.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "../assets/splash-admin.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.farmconnectbw.admin",
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "../assets/adaptive-icon-admin.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.farmconnectbw.admin",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "../assets/favicon-admin.png",
+      "bundler": "metro"
+    },
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "farmconnectbw-admin"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "../assets/fonts/SpaceMono-Regular.ttf"
+          ]
+        }
+      ]
+    ],
+    "scheme": "farmconnectbw-admin",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
